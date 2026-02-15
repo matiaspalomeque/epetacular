@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Matías Palomeque">
+    <title>Analizador de Facturas de la EPE</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div id="uploadZone">
+            <img src="logo.png" alt="EPEtacular - Analizador de facturas de la EPE" class="logo">
+            <h2>Analizador de Facturas de la EPE</h2>
+            <p>Arrastra tus facturas en PDF aquí o haz clic para seleccionar archivos</p>
+            <button class="btn" onclick="document.getElementById('fileInput').click()">Seleccionar Archivos PDF</button>
+            <input type="file" id="fileInput" accept=".pdf" multiple>
+        </div>
+
+        <div id="status"></div>
+
+        <div id="fileList">
+            <h3>Archivos Cargados (<span id="fileCount">0</span>)</h3>
+            <div id="fileItems"></div>
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="btn" id="processBtn" onclick="processFiles()">Generar Dashboard</button>
+                <button class="btn btn-secondary" onclick="resetApp()">Limpiar Todo</button>
+            </div>
+        </div>
+
+        <div id="dashboardArea"></div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

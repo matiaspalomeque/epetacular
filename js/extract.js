@@ -4,7 +4,8 @@ import { extractClientName } from './pdf.js';
 function extractBasicInfo(text) {
     const clientName = extractClientName(text);
     const emissionMatch = text.match(/FECHA DE EMISION:\s*(\d{2}\/\d{2}\/\d{4})/);
-    if (!clientName || !emissionMatch) return null;
+    if (!clientName) return { error: "No se encontró el nombre del titular" };
+    if (!emissionMatch) return { error: "No se encontró la fecha de emisión" };
 
     let periodMatch = text.match(/PERIODO\s*(\d+\/\d+)/);
     if (!periodMatch) {
@@ -100,7 +101,7 @@ function extractTotal(text) {
 
 export function extractBillData(text, filename) {
     const basic = extractBasicInfo(text);
-    if (!basic) return null;
+    if (basic.error) return { error: basic.error };
 
     const tiers = extractTiers(text);
     const charges = extractCharges(text);

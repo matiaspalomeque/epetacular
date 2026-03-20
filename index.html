@@ -19,7 +19,7 @@
             <img src="logo.png" alt="EPEtacular - Analizador de facturas de la EPE" class="logo">
             <h2>Analizador de Facturas de la EPE</h2>
             <p>Arrastra tus facturas en PDF aquí o haz clic para seleccionar archivos</p>
-            <button class="btn" onclick="document.getElementById('fileInput').click()">Seleccionar Archivos PDF</button>
+            <button class="btn" id="selectFilesBtn">Seleccionar Archivos PDF</button>
             <input type="file" id="fileInput" accept=".pdf" multiple>
         </div>
 
@@ -29,8 +29,8 @@
             <h3>Archivos Cargados (<span id="fileCount">0</span>)</h3>
             <div id="fileItems"></div>
             <div style="margin-top: 20px; text-align: center;">
-                <button class="btn" id="processBtn" onclick="processFiles()">Generar Dashboard</button>
-                <button class="btn btn-secondary" onclick="resetApp()">Limpiar Todo</button>
+                <button class="btn" id="processBtn">Generar Dashboard</button>
+                <button class="btn btn-secondary" id="resetBtn">Limpiar Todo</button>
             </div>
         </div>
 

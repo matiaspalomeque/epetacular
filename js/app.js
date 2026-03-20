@@ -9,8 +9,6 @@ window.addEventListener('load', function() {
 });
 
 function initApp() {
-    console.log('Checking PDF.js availability...', typeof window.pdfjsLib);
-
     const pdfjsLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
 
     if (!pdfjsLib) {
@@ -61,7 +59,7 @@ function initApp() {
             return;
         }
 
-        uploadedFiles.push(...pdfFiles.map(file => ({ file, name: file.name })));
+        uploadedFiles = [...uploadedFiles, ...pdfFiles.map(file => ({ file, name: file.name }))];
         updateFileList();
 
         const ignoredCount = files.length - pdfFiles.length;
@@ -92,21 +90,21 @@ function initApp() {
                 <div class="file-item">
                     <span class="name">${fileName}</span>
                     <span class="status ${statusClass}">${statusText}</span>
-                    <span class="remove" onclick="window.removeFile(${index})" title="Eliminar">✕</span>
+                    <span class="remove" data-index="${index}" title="Eliminar">✕</span>
                 </div>
             `;
         }).join('');
     }
 
-    window.removeFile = function(index) {
-        uploadedFiles.splice(index, 1);
+    function removeFile(index) {
+        uploadedFiles = [...uploadedFiles.slice(0, index), ...uploadedFiles.slice(index + 1)];
         updateFileList();
         if (uploadedFiles.length === 0) {
             hideStatus();
         }
-    };
+    }
 
-    window.resetApp = function() {
+    function resetApp() {
         uploadedFiles = [];
         updateFileList();
         hideStatus();
@@ -114,7 +112,29 @@ function initApp() {
         dashboardArea.innerHTML = '';
         uploadZone.classList.remove('processing');
         processBtn.disabled = false;
-    };
+    }
+
+    fileItems.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('.remove');
+        if (removeBtn) {
+            const index = parseInt(removeBtn.dataset.index, 10);
+            if (Number.isNaN(index)) return;
+            removeFile(index);
+        }
+    });
+
+    document.getElementById('selectFilesBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        fileInput.click();
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        resetApp();
+    });
+
+    dashboardArea.addEventListener('click', (e) => {
+        if (e.target.id === 'resetFromDashboardBtn') resetApp();
+    });
 
     uploadZone.addEventListener('click', (e) => {
         if (uploadZone.classList.contains('processing')) {
@@ -147,7 +167,9 @@ function initApp() {
         fileInput.value = '';
     });
 
-    window.processFiles = async function() {
+    processBtn.addEventListener('click', () => processFiles());
+
+    async function processFiles() {
         if (uploadedFiles.length === 0) {
             showStatus('No hay archivos para procesar.', 'error');
             return;
@@ -161,35 +183,35 @@ function initApp() {
         let successCount = 0;
         let errorCount = 0;
 
+        function updateFileStatus(index, status, statusText) {
+            uploadedFiles = uploadedFiles.map((f, idx) =>
+                idx === index ? { ...f, status, statusText } : f
+            );
+            updateFileList();
+        }
+
         for (let i = 0; i < uploadedFiles.length; i++) {
             const fileObj = uploadedFiles[i];
-            fileObj.status = 'processing';
-            fileObj.statusText = 'Procesando...';
-            updateFileList();
+            updateFileStatus(i, 'processing', 'Procesando...');
 
             try {
                 const arrayBuffer = await fileObj.file.arrayBuffer();
                 const text = await extractPdfText(arrayBuffer, pdfjsLib);
                 const billData = extractBillData(text, fileObj.name);
 
-                if (!billData) {
-                    fileObj.status = 'error';
-                    fileObj.statusText = 'No se pudo extraer datos';
+                if (billData.error) {
+                    updateFileStatus(i, 'error', billData.error);
                     errorCount++;
                 } else {
                     billsData.push(billData);
-                    fileObj.status = 'success';
-                    fileObj.statusText = '✓ Procesado';
+                    updateFileStatus(i, 'success', '✓ Procesado');
                     successCount++;
                 }
             } catch (err) {
                 console.error('Error processing PDF:', err);
-                fileObj.status = 'error';
-                fileObj.statusText = 'Error al leer';
+                updateFileStatus(i, 'error', 'Error al leer');
                 errorCount++;
             }
-
-            updateFileList();
         }
 
         uploadZone.classList.remove('processing');
@@ -205,9 +227,9 @@ function initApp() {
             'success'
         );
 
-        sortByEmissionDate(billsData);
-        renderDashboard(billsData);
-    };
+        const sortedBills = sortByEmissionDate(billsData);
+        renderDashboard(sortedBills);
+    }
 
     function renderDashboard(billsData) {
         const latestCpiKey = getLatestCpiKey();
@@ -219,6 +241,14 @@ function initApp() {
         };
         const latestMonthLabel = `${monthNames[latestMonth]} ${latestYear}`;
 
+        const latestCpiDate = new Date(parseInt(latestYear, 10), parseInt(latestMonth, 10) - 1);
+        const now = new Date();
+        const monthsStale = (now.getFullYear() - latestCpiDate.getFullYear()) * 12
+            + (now.getMonth() - latestCpiDate.getMonth());
+        const cpiStaleWarning = monthsStale > 3
+            ? `<p class="cpi-stale-warning">Los datos de IPC tienen ${monthsStale} meses de atraso (último dato: ${latestMonthLabel}). El ajuste por inflación puede no ser preciso.</p>`
+            : '';
+
         const lastBill = billsData[billsData.length - 1];
         const totalConsumption = billsData.reduce((sum, b) => sum + b.consumptionKwh, 0);
         const avgConsumption = totalConsumption / billsData.length;
@@ -229,12 +259,13 @@ function initApp() {
                 <img src="logo.png" alt="EPEtacular - Analizador de facturas de la EPE" class="header-logo">
                 <h1>Dashboard de Facturación Eléctrica</h1>
                 <p class="subtitle">Empresa Provincial de la Energía - Santa Fe</p>
-                <p class="note">Generado el ${new Date().toLocaleDateString('es-AR')}</p>
+                <p class="note">Generado el ${now.toLocaleDateString('es-AR')}</p>
                 <div class="inflation-toggle">
                     <input type="checkbox" id="inflationToggle">
                     <label for="inflationToggle" id="inflationLabel">Valores nominales</label>
                     <a href="#" id="inflationInfoLink" class="inflation-info-link" title="¿Qué significa esto?">ⓘ ¿Qué es esto?</a>
                 </div>
+                ${cpiStaleWarning}
             </header>
 
             <div class="kpi-grid">
@@ -294,7 +325,7 @@ function initApp() {
             <footer>
                 <p><strong>Nota:</strong> Dashboard generado desde ${billsData.length} facturas de la EPE.</p>
                 <p style="margin-top: 15px;">Análisis realizado completamente en tu navegador - tus datos nunca salen de tu dispositivo</p>
-                <p style="margin-top: 10px;"><button class="btn" onclick="window.resetApp()">Procesar Más Facturas</button></p>
+                <p style="margin-top: 10px;"><button class="btn" id="resetFromDashboardBtn">Procesar Más Facturas</button></p>
             </footer>
         `;
 

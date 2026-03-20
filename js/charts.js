@@ -87,7 +87,9 @@ export function initializeCharts(billsData, latestMonthLabel) {
         const consumoDiario = chartBills.map(b => (
             b.days > 0 ? +(b.consumptionKwh / b.days).toFixed(2) : 0
         ));
-        const costoxkwh = chartBills.map(b => +(getValue(b.total, b.emissionDate) / b.consumptionKwh).toFixed(2));
+        const costoxkwh = chartBills.map(b =>
+            b.consumptionKwh > 0 ? +(getValue(b.total, b.emissionDate) / b.consumptionKwh).toFixed(2) : 0
+        );
 
         const taxKeys = ['IVA 21%', 'C.A.P.', 'Ley 7797', 'Ord. Mun. 1618/62', 'Ord. Mun. 1592/62', 'Ley 6604-FER', 'Energías Renovables'];
         const taxDataByKey = {};

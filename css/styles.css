@@ -297,6 +297,17 @@ h1 {
     text-decoration: underline;
 }
 
+.cpi-stale-warning {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background: rgba(255, 193, 7, 0.15);
+    border: 1px solid rgba(255, 193, 7, 0.4);
+    border-radius: 8px;
+    color: #ffc107;
+    font-size: 0.82rem;
+    text-align: center;
+}
+
 /* Modal */
 .modal-overlay {
     display: none;

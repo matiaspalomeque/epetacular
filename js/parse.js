@@ -9,7 +9,7 @@ export function titleCase(name) {
 }
 
 export function sortByEmissionDate(bills) {
-    return bills.sort((a, b) => {
+    return [...bills].sort((a, b) => {
         const dateA = a.emissionDate.split("/").reverse().join("");
         const dateB = b.emissionDate.split("/").reverse().join("");
         return dateA.localeCompare(dateB);

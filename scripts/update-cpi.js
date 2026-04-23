@@ -56,7 +56,7 @@ async function main() {
   }
 
   // 2. Extract all existing "MM/YYYY" keys
-  const existingKeys = [...fileText.matchAll(/"(\d{2}\/\d{4})":/g)].map(
+  const existingKeys = [...fileText.matchAll(/['"](\d{2}\/\d{4})['"]:/g)].map(
     (m) => m[1]
   );
   if (existingKeys.length === 0) {
@@ -95,7 +95,7 @@ async function main() {
 
   // 8-9. Format lines and insert before the closing `};`
   const newLines = newEntries
-    .map(({ key, value }) => `    "${key}": ${parseFloat(value).toFixed(2)},`)
+    .map(({ key, value }) => `  '${key}': ${parseFloat(value).toFixed(2)},`)
     .join("\n");
 
   // Replace last occurrence of `};` line (handles trailing newline variants)

@@ -61,6 +61,7 @@ export const CPI_INDEX = {
   '12/2025': 10121.37,
   '01/2026': 10413.03,
   '02/2026': 10714.63,
+  '03/2026': 11077.06,
 };
 
 export function getLatestCpiKey() {
